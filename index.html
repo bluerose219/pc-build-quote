@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PC 견적 비교</title>
+<meta name="description" content="개발·로컬 AI용 인텔 PC 견적 (모니터 포함), 다나와 최저가 기준 2026-10-13">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --text: #1a1d23; --muted: #646b78;
+  --line: #e3e6eb; --accent: #2457d6; --accent-soft: #e8eefc;
+  --good: #1f8a4c; --warn: #b4560f; --warn-soft: #fdf1e6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111318; --surface: #1a1d24; --text: #e8eaee; --muted: #9aa1ad;
+    --line: #2b303a; --accent: #7aa2ff; --accent-soft: #1f2a44;
+    --good: #5cc98a; --warn: #f0a25c; --warn-soft: #3a2a1a;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111318; --surface: #1a1d24; --text: #e8eaee; --muted: #9aa1ad;
+  --line: #2b303a; --accent: #7aa2ff; --accent-soft: #1f2a44;
+  --good: #5cc98a; --warn: #f0a25c; --warn-soft: #3a2a1a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Noto Sans KR", system-ui, sans-serif; line-height: 1.6;
+}
+main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+header h1 { font-size: 1.7rem; margin: 0 0 4px; }
+header p { margin: 0; color: var(--muted); font-size: .95rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0 16px; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.seg button {
+  border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 500;
+  padding: 7px 14px; border-radius: 8px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.tile .label { color: var(--muted); font-size: .85rem; }
+.tile .value { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile .sub { color: var(--muted); font-size: .8rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+.card h2 { font-size: 1.05rem; margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 500; font-size: .82rem; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.cat { color: var(--muted); white-space: nowrap; }
+td .shop { display: block; color: var(--muted); font-size: .8rem; }
+tr.changed td { background: var(--accent-soft); }
+tfoot td { font-weight: 700; border-bottom: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.tag { display: inline-block; font-size: .72rem; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 1px; }
+.body { padding: 14px 16px; }
+.body ul { margin: 0; padding-left: 20px; }
+.body li { margin: 4px 0; }
+.check { list-style: none; padding-left: 0 !important; }
+.check li::before { content: "✓"; color: var(--good); font-weight: 700; margin-right: 8px; }
+.check li.todo::before { content: "!"; color: var(--warn); }
+.notice { background: var(--warn-soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; font-size: .9rem; margin-bottom: 20px; }
+footer { color: var(--muted); font-size: .8rem; margin-top: 32px; }
+@media (max-width: 600px) {
+  th, td { padding: 9px 10px; }
+  header h1 { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>새 PC 견적 비교</h1>
+    <p>개발·로컬 AI용 인텔 PC, 모니터 포함 · 다나와 판매처 최대 40곳 비교 · 2026-10-13 조회</p>
+  </header>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="견적 선택">
+      <button data-build="A" aria-pressed="true">A 추천안</button>
+      <button data-build="B" aria-pressed="false">B 절약안</button>
+    </div>
+    <div class="seg" role="group" aria-label="결제 방식">
+      <button data-pay="cash" aria-pressed="true">현금 최저가</button>
+      <button data-pay="card" aria-pressed="false">카드 일반결제</button>
+    </div>
+  </div>
+
+  <section class="summary">
+    <div class="tile"><div class="label">합계</div><div class="value" id="total">-</div><div class="sub">배송비 포함, 윈도우 제외</div></div>
+    <div class="tile"><div class="label">본체만</div><div class="value" id="body-total">-</div><div class="sub">모니터 제외</div></div>
+    <div class="tile"><div class="label">예산 대비</div><div class="value" id="budget">-</div><div class="sub">예산 상한 300만 원 기준</div></div>
+  </section>
+
+  <section class="card">
+    <h2 id="table-title">부품 목록</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>부품</th><th>모델</th><th class="num">가격</th></tr></thead>
+        <tbody id="rows"></tbody>
+        <tfoot><tr><td></td><td>합계</td><td class="num" id="foot-total"></td></tr></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <div class="notice">
+    <strong>살 때 주의할 점</strong><br>
+    현금 최저가는 대부분 소규모 컴퓨터 전문몰입니다. 판매처 평판을 확인하세요.
+    네이버쇼핑·쿠팡은 이번 조회에 포함되지 않았고, 가격은 조회 시점 기준이라 계속 바뀝니다.
+  </div>
+
+  <section class="card">
+    <h2>카드 할인을 받을 수 있는 곳</h2>
+    <div class="body"><ul>
+      <li>그래픽카드: SSG KB국민카드 + 쿠폰 1,010,640원 · 롯데ON 롯데카드 1,047,160원</li>
+      <li>모니터(AOC): 옥션·G마켓 삼성카드 231,560원</li>
+      <li>모니터(크로스오버): G마켓·옥션 삼성카드 157,170원</li>
+      <li>메인보드: 롯데ON 롯데카드 177,830원</li>
+      <li>파워: 롯데ON 롯데카드 116,100원</li>
+      <li>케이스: SSG KB국민카드 45,833원</li>
+    </ul></div>
+  </section>
+
+  <section class="card">
+    <h2>이렇게 고른 이유</h2>
+    <div class="body"><ul>
+      <li><strong>그래픽카드 VRAM 16GB:</strong> 로컬 LLM은 VRAM이 가장 중요합니다. 5070 Ti(182만 원~)도 16GB라서 5060 Ti 16GB의 가성비가 가장 좋습니다.</li>
+      <li><strong>RAM 32GB:</strong> 메모리 가격 폭등으로 64GB는 180만 원이 넘습니다. 슬롯 2개가 남으니 가격이 내려가면 늘리세요.</li>
+      <li><strong>RAM 제품:</strong> 판매처가 40곳 이상인 Crucial로 골랐습니다.</li>
+      <li><strong>CPU:</strong> 250K Plus(고성능 6 + 효율 12코어)는 개발 작업에 충분합니다. B안의 225F는 기본 쿨러가 있고 내장그래픽이 없습니다.</li>
+      <li><strong>파워 750W:</strong> 실제 소비전력은 400W 안팎이라 나중에 그래픽카드를 바꿀 여유가 있습니다.</li>
+    </ul></div>
+  </section>
+
+  <section class="card">
+    <h2>호환성 체크</h2>
+    <div class="body"><ul class="check">
+      <li>CPU 소켓 LGA1851 = B860 메인보드 소켓</li>
+      <li class="todo"><strong>메인보드 BIOS가 250K Plus를 지원하는지 판매처에 확인</strong></li>
+      <li>RAM·메인보드 모두 DDR5</li>
+      <li>파워 750W ≥ 5060 Ti 권장 용량</li>
+      <li>mATX 보드 → 미들타워 케이스 장착 가능</li>
+      <li class="todo">쿨러 높이(155mm) ↔ 케이스 지원 높이 확인</li>
+    </ul></div>
+  </section>
+
+  <footer>가격 출처: 다나와 가격비교 (2026-10-13). 링크는 다나와 상품 페이지로 연결됩니다.</footer>
+</main>
+
+<script>
+const D = "https://prod.danawa.com/info/?pcode=";
+const PARTS = {
+  cpuA:  { cat: "CPU", name: "인텔 코어 울트라 5 250K Plus", pcode: "108424451", cash: [309800, "요테크"], card: [337560, "피시포올"] },
+  cpuB:  { cat: "CPU", name: "인텔 코어 울트라 5 225F (기본 쿨러 포함)", pcode: "74123111", cash: [204800, "다올씨앤씨"], card: [215380, "메이드시스템"] },
+  coolA: { cat: "쿨러", name: "Thermalright Peerless Assassin 120 SE", pcode: "16525058", cash: [39890, "씨앤씨유통"], card: [42200, "요피씨"] },
+  coolB: { cat: "쿨러", name: "CPU 기본 쿨러 사용", cash: [0, ""], card: [0, ""] },
+  mb:    { cat: "메인보드", name: "GIGABYTE B860M GAMING X", pcode: "122669173", cash: [176300, "씨앤씨유통"], card: [183210, "메이드시스템·11번가"] },
+  ram:   { cat: "RAM", name: "Crucial DDR5-5600 CL46 PRO 32GB (16GB×2)", pcode: "20369066", cash: [687800, "myks"], card: [729360, "메이드시스템"] },
+  gpu:   { cat: "그래픽카드", name: "COLORFUL RTX 5060 Ti GAMING DUO 16GB", pcode: "101725832", cash: [955000, "피씨블랙"], card: [1044000, "HCNS"] },
+  ssd:   { cat: "SSD", name: "KLEVV CRAS C910G 1TB NVMe Gen4", pcode: "98242505", cash: [270000, "다올씨앤씨"], card: [291980, "컴오아시스"] },
+  psu:   { cat: "파워", name: "마이크로닉스 Classic II 750W 80+ 골드 풀모듈러", pcode: "58913891", cash: [117700, "킹덤몰"], card: [128920, "G마켓"] },
+  case:  { cat: "케이스", name: "DAVEN D7 Mesh 세븐팬", pcode: "102621416", cash: [51900, "디스컴시스템"], card: [54380, "요피씨"] },
+  monA:  { cat: "모니터", name: "알파스캔 AOC Q27G40HE 27\" QHD 210Hz", pcode: "124101688", cash: [239000, "알파스캔"], card: [239000, "알파스캔"], monitor: true },
+  monB:  { cat: "모니터", name: "크로스오버 27QD166CM 27\" QHD IPS USB-C", pcode: "90890663", cash: [159890, "컴나무"], card: [169000, "G마켓"], monitor: true },
+};
+const BUILDS = {
+  A: { title: "견적 A · 추천안", parts: ["cpuA","coolA","mb","ram","gpu","ssd","psu","case","monA"], changed: [] },
+  B: { title: "견적 B · 절약안 (A에서 CPU·쿨러·모니터 변경)", parts: ["cpuB","coolB","mb","ram","gpu","ssd","psu","case","monB"], changed: ["cpuB","coolB","monB"] },
+};
+const BUDGET = 3000000;
+const won = n => n.toLocaleString("ko-KR") + "원";
+const man = n => (n / 10000).toFixed(1) + "만";
+let state = { build: "A", pay: "cash" };
+try { const s = JSON.parse(localStorage.getItem("pc-quote") || "null"); if (s) state = { ...state, ...s }; } catch (e) {}
+
+function render() {
+  const b = BUILDS[state.build];
+  let total = 0, body = 0;
+  const rows = b.parts.map(k => {
+    const p = PARTS[k], [price, shop] = p[state.pay];
+    total += price; if (!p.monitor) body += price;
+    const name = p.pcode ? `<a href="${D}${p.pcode}" target="_blank" rel="noopener">${p.name}</a>` : p.name;
+    const tag = b.changed.includes(k) ? '<span class="tag">변경</span>' : "";
+    return `<tr class="${tag ? "changed" : ""}"><td class="cat">${p.cat}</td><td>${name}${tag}</td>` +
+           `<td class="num">${won(price)}${shop ? `<span class="shop">${shop}</span>` : ""}</td></tr>`;
+  });
+  document.getElementById("rows").innerHTML = rows.join("");
+  document.getElementById("table-title").textContent = b.title + (state.pay === "cash" ? " · 현금 최저가" : " · 카드 일반결제 최저가");
+  document.getElementById("total").textContent = man(total) + " 원";
+  document.getElementById("foot-total").textContent = won(total);
+  document.getElementById("body-total").textContent = man(body) + " 원";
+  const diff = BUDGET - total, el = document.getElementById("budget");
+  el.textContent = (diff >= 0 ? "-" : "+") + man(Math.abs(diff)) + " 원";
+  el.style.color = diff >= 0 ? "var(--good)" : "var(--warn)";
+  document.querySelectorAll("[data-build]").forEach(x => x.setAttribute("aria-pressed", x.dataset.build === state.build));
+  document.querySelectorAll("[data-pay]").forEach(x => x.setAttribute("aria-pressed", x.dataset.pay === state.pay));
+  try { localStorage.setItem("pc-quote", JSON.stringify(state)); } catch (e) {}
+}
+document.querySelectorAll("[data-build]").forEach(x => x.onclick = () => { state.build = x.dataset.build; render(); });
+document.querySelectorAll("[data-pay]").forEach(x => x.onclick = () => { state.pay = x.dataset.pay; render(); });
+render();
+</script>
+</body>
+</html>
